@@ -367,6 +367,10 @@
       <span class="tag">sysmon</span>
       <span class="tag">metasploit</span>
       <span class="tag">msfvenom</span>
+      <span class="tag">oracle-virtualbox</span>
+      <span class="tag">kali-linux</span>
+      <span class="tag">win10pro</span>
+      <span class="tag">bash-scripting</span>
       <span class="tag">mitre att&ck</span>
       <span class="tag">home-lab</span>
       <span class="tag">red-team</span>
@@ -443,25 +447,37 @@
 
       <figure class="screenshot">
         <img src="../images/project-01/img-04.png" alt="Metasploit handler configuration"/>
-        <figcaption>// fig-04 — Metasploit handler configured with matching payload and lhost.</figcaption>
+        <figcaption>// fig-04 — Metasploit handler configuration before setting lhost to attacker IP.</figcaption>
       </figure>
 
       <figure class="screenshot">
-        <img src="../images/project-01/img-05.png" alt="Metasploit exploit listening"/>
-        <figcaption>// fig-05 — Handler running and listening on port 4444.</figcaption>
+        <img src="../images/project-01/img-05.png" alt="Metasploit lhost set to attacker IP"/>
+        <figcaption>// fig-05 — lhost corrected to match the Kali attacker machine IP (192.168.20.11).</figcaption>
+      </figure>
+
+      <p>With the handler properly configured, a Python HTTP server was started on port 9999 to host the malicious payload file.</p>
+
+      <figure class="screenshot">
+        <img src="../images/project-01/img-06.png" alt="Python HTTP server running"/>
+        <figcaption>// fig-06 — Python HTTP server running on port 9999 to serve the payload.</figcaption>
       </figure>
 
       <h2>Phase 4 — Payload Delivery and Execution</h2>
       <p>Windows Defender was disabled on the victim VM to simulate an unprotected endpoint (a common real-world scenario in poorly maintained environments). The payload was downloaded from the Python HTTP server and executed.</p>
 
       <figure class="screenshot">
-        <img src="../images/project-01/img-06.png" alt="Windows VM downloading the payload file"/>
-        <figcaption>// fig-06 — Windows VM accessing the Kali HTTP server to download Resume.pdf.exe.</figcaption>
+        <img src="../images/project-01/img-07.png" alt="Windows VM accessing Kali HTTP server"/>
+        <figcaption>// fig-07 — Windows VM accessing the Kali HTTP server at 192.168.20.11:9999 to download Resume.pdf.exe.</figcaption>
       </figure>
 
       <figure class="screenshot">
-        <img src="../images/project-01/img-07.png" alt="Meterpreter session opened in Metasploit"/>
-        <figcaption>// fig-07 — Meterpreter session opened. Reverse shell successfully established.</figcaption>
+        <img src="../images/project-01/img-08.png" alt="netstat confirming connection"/>
+        <figcaption>// fig-08 — netstat output showing the established connection from Windows VM to Kali attacker (192.168.20.11:4444).</figcaption>
+      </figure>
+
+      <figure class="screenshot">
+        <img src="../images/project-01/img-09.png" alt="Meterpreter session opened"/>
+        <figcaption>// fig-09 — Meterpreter session successfully opened after the user executed the malware.</figcaption>
       </figure>
 
       <h2>Phase 5 — Post-Exploitation Enumeration</h2>
@@ -472,16 +488,9 @@ net user       # enumerate local user accounts
 net localgroup # enumerate local groups
 ipconfig       # gather network configuration</code></pre>
 
-      <p>Connection persistence was verified on the Windows side using <code>netstat -anob</code>, which confirmed the active outbound connection back to the Kali machine.</p>
-
       <figure class="screenshot">
-        <img src="../images/project-01/img-08.png" alt="netstat output confirming active connection"/>
-        <figcaption>// fig-08 — netstat -anob confirming active connection from Windows VM to Kali.</figcaption>
-      </figure>
-
-      <figure class="screenshot">
-        <img src="../images/project-01/img-09.png" alt="Post-exploitation commands running in Meterpreter"/>
-        <figcaption>// fig-09 — net user, net localgroup, and ipconfig output from compromised host.</figcaption>
+        <img src="../images/project-01/img-10.png" alt="Post-exploitation commands in Meterpreter"/>
+        <figcaption>// fig-10 — net user, net localgroup, and ipconfig executed on the compromised Windows VM.</figcaption>
       </figure>
 
       <h2>Phase 6 — Blue Team: Sysmon + Splunk Detection</h2>
@@ -495,17 +504,12 @@ ipconfig       # gather network configuration</code></pre>
       </div>
 
       <figure class="screenshot">
-        <img src="../images/project-01/img-10.png" alt="Splunk showing Sysmon events"/>
-        <figcaption>// fig-10 — Sysmon events appearing in Splunk after inputs.conf deployment.</figcaption>
+        <img src="../images/project-01/img-11.png" alt="Splunk search for Resume.pdf.exe"/>
+        <figcaption>// fig-11 — Splunk search isolating events related to the malicious payload (Resume.pdf.exe).</figcaption>
       </figure>
 
       <h2>Phase 7 — Threat Hunting with SPL</h2>
       <p>With Sysmon data flowing into Splunk, SPL queries were used to isolate activity originating from the attacking Kali machine and track the commands that were run during the post-exploitation phase.</p>
-
-      <figure class="screenshot">
-        <img src="../images/project-01/img-11.png" alt="SPL query filtering by attacker IP"/>
-        <figcaption>// fig-11 — SPL query filtering events by the Kali machine IP (192.168.20.11).</figcaption>
-      </figure>
 
       <figure class="screenshot">
         <img src="../images/project-01/img-12.png" alt="Splunk results organized by event type"/>
