@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ethan Chertkov — Cybersecurity Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #060d09;
+      --surface: #0a110d;
+      --border: #142b1c;
+      --cyan: #22ff7a;
+      --green: #4dffaa;
+      --text: #c9d8cf;
+      --muted: #8aab96;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* GRID BACKGROUND */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(34,255,122,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,255,122,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 4rem;
+      background: rgba(8,12,16,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      color: var(--cyan);
+      font-size: 0.95rem;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+
+    /* SECTIONS */
+    section {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 7rem 2rem 4rem;
+    }
+
+    /* HERO */
+    #home {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 5rem;
+    }
+
+    .hero-label {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--cyan);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.2s forwards;
+    }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: clamp(2.8rem, 7vw, 5rem);
+      font-weight: 400;
+      line-height: 1.1;
+      color: #fff;
+      margin-bottom: 1rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.4s forwards;
+    }
+
+    h1 span { color: var(--cyan); }
+
+    .hero-sub {
+      font-size: 1.15rem;
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.6s forwards;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.6s 0.8s forwards;
+    }
+
+    .badge {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .badge:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .hero-ctas {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.6s 1s forwards;
+    }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.75rem 1.8rem;
+      border-radius: 2px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--cyan);
+      color: #000;
+      border: 1px solid var(--cyan);
+    }
+    .btn-primary:hover { background: transparent; color: var(--cyan); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* SECTION HEADERS */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    h2 {
+      font-family: var(--mono);
+      font-size: 1.8rem;
+      font-weight: 400;
+      color: #fff;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ABOUT */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .about-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+    .about-card:hover { border-color: rgba(34,255,122,0.3); }
+
+    .about-card h3 {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .about-card p, .about-card li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .about-card ul { list-style: none; }
+    .about-card li::before { content: '▸ '; color: var(--cyan); }
+
+    .about-intro {
+      font-size: 1.05rem;
+      color: var(--text);
+      line-height: 1.8;
+      max-width: 700px;
+    }
+
+    /* PROJECTS */
+    .projects-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+    }
+
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.8rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      align-items: start;
+      transition: border-color 0.2s, transform 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+    .project-card:hover {
+      border-color: rgba(34,255,122,0.4);
+      transform: translateX(4px);
+    }
+
+    .project-number {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--cyan);
+      opacity: 0.5;
+      margin-bottom: 0.4rem;
+    }
+
+    .project-title {
+      font-family: var(--mono);
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-desc {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.8rem;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.6rem;
+      background: rgba(34,255,122,0.06);
+      border: 1px solid rgba(34,255,122,0.15);
+      color: var(--cyan);
+      border-radius: 2px;
+    }
+
+    .project-arrow {
+      font-size: 1.2rem;
+      color: var(--muted);
+      transition: color 0.2s, transform 0.2s;
+      padding-top: 0.2rem;
+    }
+    .project-card:hover .project-arrow { color: var(--cyan); transform: translateX(3px); }
+
+    .coming-soon {
+      text-align: center;
+      padding: 3rem;
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .coming-soon span { color: var(--cyan); }
+
+    /* CERTS */
+    .certs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.8rem;
+      margin-top: 1rem;
+    }
+
+    .cert-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .cert-item:hover { border-color: rgba(34,255,122,0.3); }
+    .cert-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* CONTACT */
+    .contact-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3rem;
+      text-align: center;
+    }
+
+    .contact-wrapper p {
+      color: var(--muted);
+      max-width: 480px;
+      margin: 0 auto 2.5rem;
+      font-size: 1rem;
+    }
+
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .contact-link {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.75rem 1.8rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .contact-link:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* FOOTER */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s, transform 0.6s;
+    }
+    .fade-in.visible { opacity: 1; transform: none; }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { gap: 1.5rem; }
+      .about-grid { grid-template-columns: 1fr; }
+      .contact-wrapper { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#home" class="nav-logo">echkv ~</a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- HOME -->
+  <section id="home">
+    <p class="hero-label">// cybersecurity portfolio</p>
+    <h1>Ethan<br><span>Chertkov</span></h1>
+    <p class="hero-sub">IT professional with 3+ years of experience breaking into cybersecurity. Building real skills, one project at a time.</p>
+    <p style="font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin-bottom: 2.5rem; letter-spacing: 0.08em; opacity: 0; animation: fadeUp 0.6s 0.7s forwards;">📍 Lawrence Township, NJ 08648</p>
+    <div class="hero-ctas">
+      <a href="#projects" class="btn btn-primary">View Projects</a>
+      <a href="#about" class="btn btn-ghost">About Me</a>
+      <a href="#contact" class="btn btn-ghost">Get In Touch</a>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-header fade-in">
+      <span class="section-label">01 // about</span>
+      <div class="section-line"></div>
+    </div>
+    <p class="about-intro fade-in">
+      I am an IT professional driven by a focus on process connectivity and proactive defense. Over the last three years, I have moved beyond basic troubleshooting to focus on building secure, resilient systems. My approach combines technical grit with a long-term commitment to transparency and excellence. I am currently sharpening my skills through hands-on GRC projects and lab work while preparing for further academic specialization. My goal is to bring this forward-thinking mindset to a high-impact analyst role and eventually lead within the cybersecurity industry.
+    </p>
+    <div class="about-grid">
+      <div class="about-card fade-in">
+        <h3>Experience</h3>
+        <ul>
+          <li>Technical Support Specialist — Knipper Health (2024–2026)</li>
+          <li>Help Desk Coordinator — J.H. Tech Solutions (2023–2024)</li>
+          <li>Currently building hands-on lab skills in threat detection & GRC</li>
+        </ul>
+      </div>
+      <div class="about-card fade-in">
+        <h3>Education</h3>
+        <ul>
+          <li>B.S. Information Technology — WGU (May 2026)</li>
+          <li>CompTIA Security+ &amp; Network+</li>
+          <li>AWS Certified Cloud Practitioner</li>
+          <li>ITIL 4 Foundation</li>
+          <li>LPI LPIC-1</li>
+          <li>ISO 27001 Internal Auditor &amp; Lead Implementor</li>
+          <li>PMI CAPM</li>
+        </ul>
+      </div>
+      <div class="about-card fade-in">
+        <h3>Security Tools</h3>
+        <ul>
+          <li>Rapid7 InsightIDR</li>
+          <li>Splunk</li>
+          <li>Wireshark / NCAP</li>
+          <li>Kali Linux</li>
+          <li>Azure & Entra ID</li>
+        </ul>
+      </div>
+      <div class="about-card fade-in">
+        <h3>Focus Areas</h3>
+        <ul>
+          <li>Threat Detection & SIEM</li>
+          <li>Incident Response</li>
+          <li>ISO 27001 & Compliance</li>
+          <li>Cloud Security (AWS/Azure)</li>
+          <li>Network Analysis</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects">
+    <div class="section-header fade-in">
+      <span class="section-label">02 // projects</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="projects-grid">
+
+      <!-- Add your projects here. Copy a project-card block and fill it in. -->
+
+      <a href="projects/cybersecurity-telemetry.html" class="project-card">
+        <div>
+          <p class="project-number">// 001</p>
+          <p class="project-title">Red vs. Blue: MITRE-Tagged Telemetry Lab</p>
+          <p class="project-desc">Built a full attack-and-detect pipeline using Sysmon, Splunk, and Metasploit in an isolated virtual lab. Simulated a reverse shell attack and tracked every command with MITRE ATT&CK-tagged telemetry.</p>
+          <div class="project-tags">
+            <span class="tag">splunk</span>
+            <span class="tag">sysmon</span>
+            <span class="tag">metasploit</span>
+            <span class="tag">mitre att&ck</span>
+            <span class="tag">home-lab</span>
+          </div>
+        </div>
+        <div class="project-arrow">→</div>
+      </a>
+
+      <a href="projects/automated-soc-lab.html" class="project-card">
+        <div>
+          <p class="project-number">// 002</p>
+          <p class="project-title">Automated SOC Lab with Wazuh + TheHive + Shuffle</p>
+          <p class="project-desc">Building a fully automated Security Operations Center environment integrating Wazuh (SIEM/XDR), TheHive (case management), and Shuffle (SOAR) to automate threat detection, investigation, and response workflows.</p>
+          <div class="project-tags">
+            <span class="tag">wazuh</span>
+            <span class="tag">thehive</span>
+            <span class="tag">shuffle</span>
+            <span class="tag">soar</span>
+            <span class="tag">siem</span>
+            <span class="tag">xdr</span>
+            <span class="tag">automation</span>
+          </div>
+        </div>
+        <div class="project-arrow">→</div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-header fade-in">
+      <span class="section-label">03 // contact</span>
+      <div class="section-line"></div>
+    </div>
+    <div class="contact-wrapper fade-in">
+      <h2>Let's Connect</h2>
+      <p>I am currently looking for my next challenge in cybersecurity and would love to expand my professional circle. If you have an open role, a project idea you want to collaborate on, or just want to chat about the latest in security, please reach out. I am always happy to connect and see how we can work together.</p>
+      <div class="contact-links">
+        <a href="mailto:ethan.chertkov@gmail.com" class="contact-link">Email Me</a>
+        <a href="https://www.linkedin.com/in/ethan-chertkov" target="_blank" class="contact-link">LinkedIn</a>
+        <a href="https://github.com/echkv" target="_blank" class="contact-link">GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Ethan Chertkov — echkv.github.io — built with HTML & GitHub Pages</p>
+  </footer>
+
+  <script>
+    // Scroll animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((e, i) => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('visible'), i * 80);
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
