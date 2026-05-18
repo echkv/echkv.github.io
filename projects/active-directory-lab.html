@@ -440,13 +440,6 @@
         <figcaption>// fig-04 — Running "ip a" to confirm the static IP configuration took effect.</figcaption>
       </figure>
 
-      <p>After confirming the network settings, I tested internet connectivity by pinging google.com before proceeding with the Splunk installation.</p>
-
-      <figure class="screenshot">
-        <img src="../images/project-02/img-05.png" alt="Ping Google confirmation"/>
-        <figcaption>// fig-05 — Pinging google.com to verify DNS resolution and internet connectivity.</figcaption>
-      </figure>
-
       <h3>Installing Splunk</h3>
       <p>I downloaded the Splunk Enterprise installer for Linux from splunk.com. To transfer it into the VM without internet access, I used VirtualBox's shared folder feature. I created a transient shared folder, installed VirtualBox Guest Additions on the Ubuntu server, and rebooted.</p>
 
@@ -454,7 +447,7 @@
 
       <pre><code>sudo adduser echkv vboxsf</code></pre>
 
-      <p>Then I created a local shared directory, mounted it, and ran the Splunk installer.</p>
+      <p>Then I created a local shared directory, mounted it, and accessed the shared folder to run the Splunk installer.</p>
 
       <figure class="screenshot">
         <img src="../images/project-02/img-05.png" alt="Installing Splunk from shared folder"/>
